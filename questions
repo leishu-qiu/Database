@@ -1,0 +1,55 @@
+Questions
+
+1. Consider the thread created in start_listener. How many threads with this functionality should be running on the server at any given time?
+
+The function start_listener() creates a thread that runs the listener() function. The listener thread is reponsible for handling incoming connections from clients. There should be one thread with this listener functionality running on the server at any given time. 
+
+
+2. In the listener function, what do each of the following fields of the sockaddr_in struct represent: sin_family, sin_port, and sin_addr.s_addr?
+
+sin_faimly represents the address family. In the listener function, sin_family is set to AF_INET, which means using IPv4 address family.
+
+sin_port represents the port number on which the server is listening for incoming connections. It's set to htons(comm_port) here. htons() converts the port number from host byte order to network byte order.
+
+sin_addr.s_addr represents the IP address of the server. It's set to htonl(INADDR_ANY) here. INADDR_ANY means server can accept connections from any network available interface. htonl() converts IP address to network byte order.
+
+
+
+3. What is the purpose of each of the following function calls in listener: socket, bind, listen, and accept? You should explain what each call does and what the effect would be if it were not called.
+
+socket(): 
+
+This function creates a new socket for communication. It takes three arguments: address of domain, socket type, and protocol to be used with the socket. This call returns an entry to file descriptor table. Without this call, the incoming socket will not be bound to the server address, and listen() will not direct the incoming 
+the server would not have a socket available to listen for incoming connections, and bind() and listen() would not have a socket to work with. 
+
+bind():
+
+A server need to bind name to socket. The function associates a socket with a specific IP address and port. Without this call, the incoming socket remains unassociated with the server's address. And so the listen operation will not accurately route incoming data to the intended address.
+
+
+listen(): 
+
+This function puts socket in listening mode to be used for incoming connections. It takes a file descriptor that refers to a socket type and maximum length to which the queue of pending connections for the socket file descriptor may grow. Without this, a backlog wouldn't be generated, and accept() wouldn't be able to accept incoming connections.
+
+
+accept(): 
+
+As server needs to explicitly accept incoming connections, this function allows the server to accept an incoming connection and return a new socket descriptor for the accepted connection. Without calling this, the server would not be able to accept multiple connections and therefore not be able to establish communication with clients. 
+
+
+Overall, the series of functions means to collectively set up a socket for the server to listen for incoming connections, bind to a specific address and port, and accept connections from clients, enabling communications between server and clients. If any function is missing, the server will not be properly configured to handle connections. 
+
+
+4. Which protocol (TCP or UDP) is used for communication? Why is this protocol used? (Hint: see line 37 in comm.c)
+
+In line 37, socket type is set to be SOCKET_STREAM, which corresponds to a TCP socket. 
+This protocol is used because it's reliable and it's connection-oriented and stream-oriented. It establishes a connection between the server and the client before any data exchange occurs. And it treats data as a continuous stream of bytes. This is important to our database functionality.
+
+5. Describe what comm_serve does. How are the response and command parameters used? What would happen if the stream pointed to by cxstr were closed?
+
+comm_serve facilitates communication with a client by sending a response and recieving a command. The cxstr represents the communication stream. If it were closed, this could lead to undefined behavior and there could be error in communication. 
+
+
+6. Describe, in detail, what happens during each iteration of the while loop in the listener function. Be sure to include explanations of all significant function calls.
+
+In each iteration of the while loop, the server is actively waiting for and handling incoming client connections that are generated before the loop. sockaddr_in client_addr represents client address. The accept function is called to accept an incoming connection from a client. It creates a new socket, which is csock here, dedicate to communication with the client. If accept returns no error, we successfully connect to a client and so we print the address and port of the client. Then a file stream cxstr is created using fdopen to wrap the socket. If this call succeeds, server is called on the file stream cxstr.
